@@ -1,3 +1,38 @@
-git add .github/workflows/deploy.yml
-git commit -m "Add deploy workflow"
-git push
+name: Deploy to Staging
+
+on:
+  push:
+    branches: [ main ]
+
+permissions:
+  id-token: write
+  contents: read
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout Code
+        uses: actions/checkout@v3
+
+      - name: Configure AWS credentials
+        uses: aws-actions/configure-aws-credentials@v4
+        with:
+          role-to-assume: arn:aws:iam::300642016615:role/GitHubActionsCodeDeployStagingRole
+          aws-region: ap-south-1
+
+      - name: Zip App
+        run: zip -r app.zip .
+
+      - name: Upload to S3
+        run: aws s3 cp app.zip s3://code-deploy-demo-artifacts/app.zip
+
+      - name: Trigger CodeDeploy
+        run: |
+          aws deploy create-deployment \
+            --application-name CodeDeployDemoApp \
+            --deployment-group-name StagingGroup \
+            --s3-location bucket=code-deploy-demo-artifacts,key=app.zip,bundleType=zip \
+            --deployment-config-name CodeDeployDefault.AllAtOnce \
+            --region ap-south-1
