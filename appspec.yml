@@ -1,0 +1,14 @@
+version: 0.0
+os: linux
+files:
+  - source: /
+    destination: /var/www/html
+
+hooks:
+as: root  AfterInstall:
+    - location: scripts/install.sh
+      runas: root
+  ApplicationStart:
+    - location: scripts/start.sh
+      runas: root
+
