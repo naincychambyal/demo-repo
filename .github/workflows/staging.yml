@@ -1,0 +1,26 @@
+name: Staging Deployment
+
+on:
+  push:
+    branches: [ dev ]
+
+jobs:
+  deploy:
+    runs-on: ubuntu-latest
+
+    steps:
+      - name: Checkout repository
+        uses: actions/checkout@v3
+
+      - name: Set up SSH key
+        run: |
+          echo "${{ secrets.SSH_PRIVATE_KEY }}" > key.pem
+          chmod 600 key.pem
+
+      - name: Copy code to EC2
+        run: |
+          scp -i key.pem -o StrictHostKeyChecking=no -r . ec2-user@${{ secrets.STAGING_EC2_IP }}:/home/ec2-user/staging-app
+
+      - name: Start server on EC2
+        run: |
+          ssh -i key.pem -o StrictHostKeyChecking=no ec2-user@${{ secrets.STAGING_EC2_IP }} 'bash /home/ec2-user/staging-app/scripts/start.sh'
