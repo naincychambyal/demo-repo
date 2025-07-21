@@ -1,0 +1,10 @@
+name: Hello
+
+on: [push]
+
+jobs:
+  say-hello:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Greeting
+        run: echo "Hello from me!"
